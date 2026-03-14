@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct TemplateKeyboardApp: App {
-    @StateObject private var store = TemplateStore()
+    @StateObject private var store = TemplateStore.shared
 
     var body: some Scene {
         WindowGroup {

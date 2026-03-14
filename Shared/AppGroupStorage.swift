@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppGroup {
-    static let identifier = "group.templatekeyboard.shared"
+    static let identifier = "group.templatekeyboard"
     static let categoriesKey = "categories"
 
     static var defaults: UserDefaults {

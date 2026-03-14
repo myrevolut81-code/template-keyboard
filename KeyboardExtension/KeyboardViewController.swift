@@ -1,60 +1,59 @@
 import UIKit
-import SwiftUI
 
 final class KeyboardViewController: UIInputViewController {
 
-    private let store = KeyboardTemplateStore()
-    private var hostingController: UIHostingController<KeyboardView>?
+    private var rootView: KeyboardRootView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let keyboardView = KeyboardView(
-            store: store,
+        TemplateStore.shared.load()
+
+        rootView = KeyboardRootView(
             insertText: { [weak self] text in
                 self?.textDocumentProxy.insertText(text)
             },
+            deleteBackward: { [weak self] in
+                guard let proxy = self?.textDocumentProxy else { return }
+                if proxy.documentContextBeforeInput != nil {
+                    proxy.deleteBackward()
+                }
+            },
+            clearAll: { [weak self] in
+                guard let proxy = self?.textDocumentProxy else { return }
+                while proxy.documentContextBeforeInput != nil {
+                    proxy.deleteBackward()
+                }
+            },
             nextKeyboard: { [weak self] in
                 self?.advanceToNextInputMode()
-            },
-            deleteBackward: { [weak self] in
-                self?.textDocumentProxy.deleteBackward()
-            },
-            selectAll: { [weak self] in
-                guard let proxy = self?.textDocumentProxy else { return }
-                let before = proxy.documentContextBeforeInput ?? ""
-                let after  = proxy.documentContextAfterInput  ?? ""
-                proxy.adjustTextPosition(byCharacterOffset: after.count)
-                let total = before.count + after.count
-                for _ in 0..<total { proxy.deleteBackward() }
             }
         )
 
-        let hc = UIHostingController(rootView: keyboardView)
-        hostingController = hc
-
-        addChild(hc)
-        view.addSubview(hc.view)
-        hc.didMove(toParent: self)
-
-        hc.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(rootView)
+        rootView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            hc.view.topAnchor.constraint(equalTo: view.topAnchor),
-            hc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            hc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            hc.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            rootView.topAnchor.constraint(equalTo: view.topAnchor),
+            rootView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            rootView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            rootView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
-        // Explicit height so the system knows how tall the keyboard is.
-        let heightConstraint = view.heightAnchor.constraint(equalToConstant: 260)
-        heightConstraint.priority = .defaultHigh
-        heightConstraint.isActive = true
+        // Fallback height — overridden with required priority in viewDidAppear
+        let fallback = view.heightAnchor.constraint(equalToConstant: 320)
+        fallback.priority = .defaultHigh
+        fallback.isActive = true
     }
 
-    // Reload templates every time the keyboard is raised so edits
-    // made in the main app are always reflected immediately.
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        store.load()
+        TemplateStore.shared.load()
+        rootView.reload()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Required-priority constraint applied after layout settles to prevent size jumps
+        view.heightAnchor.constraint(equalToConstant: 320).isActive = true
     }
 }

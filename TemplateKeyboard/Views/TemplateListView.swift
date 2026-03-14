@@ -7,7 +7,7 @@ struct TemplateListView: View {
     @State private var showingAddTemplate = false
     @State private var templateToEdit: Template?
 
-    private var category: Category? {
+    private var category: TemplateCategory? {
         store.categories.first(where: { $0.id == categoryId })
     }
 
