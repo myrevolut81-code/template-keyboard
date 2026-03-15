@@ -55,9 +55,11 @@ final class TemplateStore: ObservableObject {
     }
 
     func deleteCategories(at offsets: IndexSet) {
-        categories.remove(atOffsets: offsets)
-        save()
+    for index in offsets.sorted(by: >) {
+        categories.remove(at: index)
     }
+    save()
+}
 
     // MARK: - Template CRUD (inside category)
 
