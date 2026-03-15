@@ -68,10 +68,14 @@ final class TemplateStore: ObservableObject {
     }
 
     func deleteTemplates(at offsets: IndexSet, in categoryId: UUID) {
-        guard let idx = categories.firstIndex(where: { $0.id == categoryId }) else { return }
-        categories[idx].templates.remove(atOffsets: offsets)
-        save()
+    guard let idx = categories.firstIndex(where: { $0.id == categoryId }) else { return }
+
+    for index in offsets.sorted(by: >) {
+        categories[idx].templates.remove(at: index)
     }
+
+    save()
+}
 
     func updateTemplate(_ template: Template, in categoryId: UUID) {
         guard
