@@ -1,0 +1,42 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build app
+        run: |
+          xcodebuild \
+          -project TemplateKeyboard.xcodeproj \
+          -scheme TemplateKeyboard \
+          -configuration Release \
+          -sdk iphoneos \
+          -destination 'generic/platform=iOS' \
+          CODE_SIGNING_ALLOWED=NO build
+
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d | head -n 1)
+          cp -r "$APP_PATH" Payload/
+          zip -r TemplateKeyboard.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: TemplateKeyboard
+          path: TemplateKeyboard.ipa
