@@ -90,9 +90,11 @@ final class TemplateStore: ObservableObject {
     }
 
     func deleteQuickTemplates(at offsets: IndexSet) {
-        quickTemplates.remove(atOffsets: offsets)
-        save()
+    for index in offsets.sorted(by: >) {
+        quickTemplates.remove(at: index)
     }
+    save()
+}
 
     func deleteQuickTemplate(id: UUID) {
         quickTemplates.removeAll { $0.id == id }
